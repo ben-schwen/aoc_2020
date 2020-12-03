@@ -1,6 +1,6 @@
 :- use_module(library(clpfd)).
 
-matrix_max([M|Ms], MAX_I, MAX_J) :-
+matrix_dims([M|Ms], [MAX_I, MAX_J]) :-
 	length([M|Ms], MAX_I),
 	length(M, MAX_J).
 
@@ -27,7 +27,7 @@ main :-
 	read_file_to_string('input3', Raw, []), 
 	split_string(Raw, '\n', [], Lines), 
 	maplist(atom_chars, Lines, M),
-	matrix_max(M, MAX_I, MAX_J),
+	matrix_dims(M, [MAX_I, MAX_J]),
 	all_index(3, 1, MAX_I, MAX_J, I2),
 	count_index(M, I2, N2),
 	write(N2), nl,
