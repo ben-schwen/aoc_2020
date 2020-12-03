@@ -4,9 +4,6 @@ matrix_max([M|Ms], MAX_I, MAX_J) :-
 	length([M|Ms], MAX_I),
 	length(M, MAX_J).
 
-row(M, N, Row) :-
-    nth1(N, M, Row).
-
 index(M, [I,J]) :-
 	nth1(I, M, Row),
 	nth1(J, Row, X),
