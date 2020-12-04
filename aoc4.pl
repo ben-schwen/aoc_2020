@@ -15,67 +15,56 @@ read_file(File, Input) :-
 	split(Lines, "", Split), 
 	maplist(concat, Split, Input).
 
-parse(byr) --> "byr:", nonblanks(_).
-parse(iyr) --> "iyr:", nonblanks(_).
-parse(eyr) --> "eyr:", nonblanks(_).
-parse(hgt) --> "hgt:", nonblanks(_).
-parse(hcl) --> "hcl:", nonblanks(_).
-parse(ecl) --> "ecl:", nonblanks(_).  
-parse(pid) --> "pid:", nonblanks(_).
-parse(cid) --> "cid:", nonblanks(_).
+parse(Op, Args) --> string_without(":", Op), ":", nonblanks(Args).
 
-parse_file([F|Fs]) -->
-	parse(F),
+parse_file([[Op,Args]|Fs]) -->
+	parse(Op, Args),
 	whites,
 	parse_file(Fs).
 parse_file([]) --> [].
 
+parse_first(Xs, Op) :-
+	nth0(0, Xs, Chars),
+	string_chars(String, Chars),
+	atom_string(Op, String).
+
 all_found(X) :-
 	atom_codes(X, Codes),
 	phrase(parse_file(Fields), Codes),
+	maplist(parse_first, Fields, Ops),
 	(
-		sort(Fields, [byr, ecl, eyr, hcl, hgt, iyr, pid]);
-		sort(Fields, [byr, cid, ecl, eyr, hcl, hgt, iyr, pid])
+		sort(Ops, [byr, ecl, eyr, hcl, hgt, iyr, pid]);
+		sort(Ops, [byr, cid, ecl, eyr, hcl, hgt, iyr, pid])
 	).
 
-field(byr(X)) --> "byr:", integer(X), whites.
-field(iyr(X)) --> "iyr:", integer(X), whites.
-field(eyr(X)) --> "eyr:", integer(X), whites.
-field(hgt_cm(X)) --> "hgt:", integer(X), "cm".
-field(hgt_in(X)) --> "hgt:", integer(X), "in".
-field(hcl(X)) --> "hcl:", "#", nonblanks(X).
-field(ecl(X)) --> "ecl:", nonblanks(X).  
-field(pid(X)) --> "pid:", digits(X).
-field(cid(X)) --> "cid:", nonblanks(X).
+parse_op(Xs) :-
+	nth0(0, Xs, Op_C),
+	nth0(1, Xs, Args),
+	string_chars(Op, Op_C),
+	operator(Op, Args).
 
-fields([F|Fs]) -->
-    field(F),
-    whites,
-    fields(Fs).
-fields([]) --> [].
-
-byr(X) :- X in 1920..2002.
-iyr(X) :- X in 2010..2020.
-eyr(X) :- X in 2020..2030.
-hgt_cm(X) :- X in 150..193.
-hgt_in(X) :- X in 59..76.
-pid(X) :- length(X,9).
-cid(_).
-hcl(Chars) :-
-	length(Chars, 6),
-	Chars ins (48..57 \/ 97..102).
-ecl(Chars) :- 
-	string_chars(String, Chars),
+operator("byr", Arg) :- number_string(N, Arg), N in 1920..2002.
+operator("iyr", Arg) :- number_string(N, Arg), N in 2010..2020.
+operator("eyr", Arg) :- number_string(N, Arg), N in 2020..2030.
+operator("pid", Arg) :- length(Arg, 9), Arg ins (48..57).
+operator("hcl", [35|Arg]) :- length(Arg, 6), Arg ins (48..57 \/ 97..102).
+operator("cid", _).
+operator("ecl", Arg) :-
+	string_chars(String, Arg),
 	atom_string(X, String), 
 	(X = amb; X = blu; X = brn; X = gry; X = grn; X = hzl; X = oth).
-
-eval_field(X) :-
-	(X -> true).
+operator("hgt", Args) :-
+	append(Arg, [X1, X2], Args),
+	number_string(N, Arg),
+	(
+		([X1,X2] = [99,109] -> N in 150..193);
+		([X1,X2] = [105,110] -> N in 59..76)
+	).
 
 all_valid(X) :-
 	atom_codes(X, Codes),
-	phrase(fields(Fields), Codes),
-	include(eval_field, Fields, Valid),
+	phrase(parse_file(Fields), Codes),
+	include(parse_op, Fields, Valid),
 	length(Fields, N),
 	length(Valid, N).
 
