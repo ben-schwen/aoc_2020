@@ -15,77 +15,76 @@ read_file(File, Input) :-
 	split(Lines, "", Split), 
 	maplist(concat, Split, Input).
 
-extract_id(String, Id) :-
-	split_string(String, ":", [], Split),
-	nth0(0, Split, Id).
+parse(byr) --> "byr:", nonblanks(_).
+parse(iyr) --> "iyr:", nonblanks(_).
+parse(eyr) --> "eyr:", nonblanks(_).
+parse(hgt) --> "hgt:", nonblanks(_).
+parse(hcl) --> "hcl:", nonblanks(_).
+parse(ecl) --> "ecl:", nonblanks(_).  
+parse(pid) --> "pid:", nonblanks(_).
+parse(cid) --> "cid:", nonblanks(_).
 
-all_ids(String, Ids) :-
-	split_string(String, " ",  [], Split),
-	maplist(extract_id, Split, Ids).
+parse_file([F|Fs]) -->
+	parse(F),
+	whites,
+	parse_file(Fs).
+parse_file([]) --> [].
 
-valid1(Ids) :-
-	member("byr", Ids),
-	member("iyr", Ids),
-	member("eyr", Ids),
-	member("hgt", Ids),
-	member("hcl", Ids),
-	member("ecl", Ids),
-	member("pid", Ids).
+all_found(X) :-
+	atom_codes(X, Codes),
+	phrase(parse_file(Fields), Codes),
+	(
+		sort(Fields, [byr, ecl, eyr, hcl, hgt, iyr, pid]);
+		sort(Fields, [byr, cid, ecl, eyr, hcl, hgt, iyr, pid])
+	).
 
-split_str2(Sep, Pad, String, Split) :-
-	split_string(String, Sep, Pad, Split).
+field(byr(X)) --> "byr:", integer(X), whites.
+field(iyr(X)) --> "iyr:", integer(X), whites.
+field(eyr(X)) --> "eyr:", integer(X), whites.
+field(hgt_cm(X)) --> "hgt:", integer(X), "cm".
+field(hgt_in(X)) --> "hgt:", integer(X), "in".
+field(hcl(X)) --> "hcl:", "#", nonblanks(X).
+field(ecl(X)) --> "ecl:", nonblanks(X).  
+field(pid(X)) --> "pid:", digits(X).
+field(cid(X)) --> "cid:", nonblanks(X).
 
-byr(X) :- X #>= 1920, X #=< 2002.
+fields([F|Fs]) -->
+    field(F),
+    whites,
+    fields(Fs).
+fields([]) --> [].
 
-iyr(X) :- X #>= 2010, X #=< 2020.
-eyr(X) :- X #>= 2020, X #=< 2030.
-hgt_cm(X) :- X #>= 150, X #=< 193.
-hgt_in(X) :- X #>= 59, X #=< 76.
+byr(X) :- X in 1920..2002.
+iyr(X) :- X in 2010..2020.
+eyr(X) :- X in 2020..2030.
+hgt_cm(X) :- X in 150..193.
+hgt_in(X) :- X in 59..76.
 pid(X) :- length(X,9).
 cid(_).
 hcl(Chars) :-
 	length(Chars, 6),
 	Chars ins (48..57 \/ 97..102).
-
 ecl(Chars) :- 
 	string_chars(String, Chars),
 	atom_string(X, String), 
 	(X = amb; X = blu; X = brn; X = gry; X = grn; X = hzl; X = oth).
 
-command(byr(X)) --> "byr:", integer(X), whites.
-command(iyr(X)) --> "iyr:", integer(X), whites.
-command(eyr(X)) --> "eyr:", integer(X), whites.
-command(hgt_cm(X)) --> "hgt:", integer(X), "cm".
-command(hgt_in(X)) --> "hgt:", integer(X), "in".
-command(hcl(X)) --> "hcl:", "#", nonblanks(X).
-command(ecl(X)) --> "ecl:", nonblanks(X).  
-command(pid(X)) --> "pid:", digits(X).
-command(cid(X)) --> "cid:", nonblanks(X).
-
-commands([Command|Commands]) -->
-    command(Command),
-    whites,
-    commands(Commands).
-commands([]) --> [].
-
-eval_command(X) :-
+eval_field(X) :-
 	(X -> true).
 
 all_valid(X) :-
 	atom_codes(X, Codes),
-	phrase(commands(Commands), Codes),
-	include(eval_command, Commands, Valid),
-	length(Commands, N),
+	phrase(fields(Fields), Codes),
+	include(eval_field, Fields, Valid),
+	length(Fields, N),
 	length(Valid, N).
 
 main :-
-	read_file('input4', Input), 
-	maplist(all_ids, Input, Ids1), 
-	include(valid1, Ids1, Valid1), 
+	read_file('input4', Input),  
+	include(all_found, Input, Valid1), 
 	length(Valid1, N1),
 	writeln(N1),
 	include(all_valid, Input, Valid_Input),
-	maplist(all_ids, Valid_Input, Ids2),
-	include(valid1, Ids2, Valid2),
+	include(all_found, Valid_Input, Valid2),
 	length(Valid2, N2),
 	writeln(N2).
