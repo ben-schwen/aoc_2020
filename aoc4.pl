@@ -2,6 +2,10 @@
 :- use_module(library(pio)).
 :- use_module(library(dcg/basics)).
 
+%%%===================================================================
+%%% Parse Input
+%%%===================================================================
+
 lines([])     --> call(eos_), !.
 lines([L|Ls]) --> line(L), lines(Ls).
 
@@ -20,6 +24,10 @@ replace(O, R, [H|T], [H|T2]) :-
 read_file(File, Input) :-
 	once(phrase_from_file(lines(Ls), File)),
 	maplist(replace(10, 32), Ls, Input).
+
+%%%===================================================================
+%%% A
+%%%===================================================================
 
 parse(Op, Args) --> string_without(":", Op), ":", nonblanks(Args).
 
@@ -40,6 +48,10 @@ all_found(Codes) :-
 		sort(Ops, [byr, ecl, eyr, hcl, hgt, iyr, pid]);
 		sort(Ops, [byr, cid, ecl, eyr, hcl, hgt, iyr, pid])
 	).
+
+%%%===================================================================
+%%% B
+%%%===================================================================
 
 parse_op([Op_C, Args|_]) :-
 	string_chars(Op, Op_C),
@@ -67,6 +79,10 @@ all_valid(Codes) :-
 	phrase(parse_file(Fields), Codes),
 	include(parse_op, Fields, Valid),
 	Fields = Valid.
+
+%%%===================================================================
+%%% Main
+%%%===================================================================
 
 main :-
 	read_file('input4', Input),  
