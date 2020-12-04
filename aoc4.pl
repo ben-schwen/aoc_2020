@@ -23,8 +23,7 @@ parse_file([[Op,Args]|Fs]) -->
 	parse_file(Fs).
 parse_file([]) --> [].
 
-parse_first(Xs, Op) :-
-	nth0(0, Xs, Chars),
+parse_first([Chars|_], Op) :-
 	string_chars(String, Chars),
 	atom_string(Op, String).
 
@@ -37,9 +36,7 @@ all_found(X) :-
 		sort(Ops, [byr, cid, ecl, eyr, hcl, hgt, iyr, pid])
 	).
 
-parse_op(Xs) :-
-	nth0(0, Xs, Op_C),
-	nth0(1, Xs, Args),
+parse_op([Op_C, Args|_]) :-
 	string_chars(Op, Op_C),
 	operator(Op, Args).
 
@@ -65,8 +62,7 @@ all_valid(X) :-
 	atom_codes(X, Codes),
 	phrase(parse_file(Fields), Codes),
 	include(parse_op, Fields, Valid),
-	length(Fields, N),
-	length(Valid, N).
+	Fields = Valid.
 
 main :-
 	read_file('input4', Input),  
