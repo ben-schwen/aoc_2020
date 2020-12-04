@@ -2,18 +2,24 @@
 :- use_module(library(pio)).
 :- use_module(library(dcg/basics)).
 
-split(In, Sep, [Left|Rest]) :-
-    append(Left, [Sep|Right], In), !, split(Right, Sep, Rest).
-split(In, _Sep, [In]).
+lines([])     --> call(eos_), !.
+lines([L|Ls]) --> line(L), lines(Ls).
 
-concat(X, Y) :-
-	atomic_list_concat(X, " ", Y).
+line([])     --> ( "\n\n" | call(eos_) ), !.
+line([C|Cs]) --> [C], line(Cs).
+
+eos_([], []).
+
+replace(_, _, [], []).
+replace(O, R, [O|T], [R|T2]) :- 
+	replace(O, R, T, T2).
+replace(O, R, [H|T], [H|T2]) :- 
+	H \= O, 
+	replace(O, R, T, T2).
 
 read_file(File, Input) :-
-	read_file_to_string(File, Raw, []), 
-	split_string(Raw, "\n", [], Lines), 
-	split(Lines, "", Split), 
-	maplist(concat, Split, Input).
+	once(phrase_from_file(lines(Ls), File)),
+	maplist(replace(10, 32), Ls, Input).
 
 parse(Op, Args) --> string_without(":", Op), ":", nonblanks(Args).
 
@@ -27,8 +33,7 @@ parse_first([Chars|_], Op) :-
 	string_chars(String, Chars),
 	atom_string(Op, String).
 
-all_found(X) :-
-	atom_codes(X, Codes),
+all_found(Codes) :-
 	phrase(parse_file(Fields), Codes),
 	maplist(parse_first, Fields, Ops),
 	(
@@ -58,8 +63,7 @@ operator("hgt", Args) :-
 		([X1,X2] = [105,110] -> N in 59..76)
 	).
 
-all_valid(X) :-
-	atom_codes(X, Codes),
+all_valid(Codes) :-
 	phrase(parse_file(Fields), Codes),
 	include(parse_op, Fields, Valid),
 	Fields = Valid.
