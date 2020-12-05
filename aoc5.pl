@@ -34,7 +34,32 @@ seat(Lower, Upper, Code, L1, U1) :-
 	L1 #= Upper - ((Upper - Lower) // 2),
 	U1 #= Upper.
 
-find_Id([C1,C2,C3,C4,C5,C6,C7,C8,C9,C10],Id) :-
+/* modularised version for arbitrary big planes
+find_row([], 0, 127).
+find_row([C|Cs], L1, U1) :-
+	seat(L, U, C, L1, U1),
+	find_row(Cs, L, U).
+
+find_col([], 0, 7).
+find_col([C|Cs], L1, U1) :-
+	seat(L, U, C, L1, U1),
+	find_col(Cs, L, U).
+
+% https://stackoverflow.com/questions/27151274/prolog-take-the-first-n-elements-of-a-list
+take(N, _, Xs) :- N =< 0, !, N =:= 0, Xs = [].
+take(_, [], []).
+take(N, [X|Xs], [X|Ys]) :- M is N-1, take(M, Xs, Ys).
+
+description_id(Cs,Id) :-
+	take(7, Cs, Row_C),
+	reverse(Row_C, Rows),
+	reverse(Cs, Rev_Cs),
+	take(3, Rev_Cs, Cols),
+	find_row(Rows, Row, Row),
+	find_col(Cols, Col, Col),
+	row_col_id(Row, Col, Id).*/
+
+description_id([C1,C2,C3,C4,C5,C6,C7,C8,C9,C10],Id) :-
 	seat(0, 127, C1, L1, U1),
 	seat(L1, U1, C2, L2, U2),
 	seat(L2, U2, C3, L3, U3),
@@ -47,13 +72,10 @@ find_Id([C1,C2,C3,C4,C5,C6,C7,C8,C9,C10],Id) :-
 	seat(L9, U9, C10, Col, Col),
 	row_col_id(Row, Col, Id).
 
-charList_codeList(Cs, Ls) :-
-	maplist(char_code, Cs, Ls).
-
 main :-
 	read_file('input5', Input), 
-	maplist(charList_codeList, Cs, Input),
-	maplist(find_Id, Cs, Ids),
+	maplist(maplist(char_code), Cs, Input),
+	maplist(description_id, Cs, Ids),
 	list_maximum(Ids, Max),
 	writeln(Max),
 	list_minimum(Ids, Min),
