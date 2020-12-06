@@ -22,14 +22,14 @@ split([H|T], Div, [[H|First]|Rest]) :-
 split_(Sep, L1, L2) :-
 	split(L1, Sep, L2).
 
-cup(Xs, U) :-
-	foldl(union, Xs, [], U).
+cup(Xss, Union) :-
+	foldl(union, Xss, [], Union).
 
-cap(Xs, U) :-
-	foldl(intersection, Xs, _, U).
+cap(Xss, Intersection) :-
+	foldl(intersection, Xss, _, Intersection).
 
-list_UniqueN(Xs, N) :-
-	maplist(list_to_set, Xs, Set),
+llist_UniqueN(Xss, N) :-
+	maplist(list_to_set, Xss, Set),
 	maplist(length, Set, Len),
 	sum_list(Len, N).
 
@@ -37,8 +37,8 @@ main :-
 	read_file('input6', Raw), 
 	maplist(split_(10), Raw, Input), 
 	maplist(cup, Input, Union),
-	list_UniqueN(Union, UN),
+	llist_UniqueN(Union, UN),
 	writeln(UN),
 	maplist(cap, Input, Intersection),
-	list_UniqueN(Intersection, IN),
+	llist_UniqueN(Intersection, IN),
 	writeln(IN).
