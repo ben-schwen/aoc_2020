@@ -70,7 +70,8 @@ main :-
 	length(Shiny, N),
 	writeln(N),
 	inside(Bags, shiny_gold, NI),
-	writeln(NI).
+	writeln(NI),
+	!.
 
 println([]).
 println([X|Xs]) :-

@@ -91,6 +91,9 @@ life(Grid) :-
     \+ same_mat(Grid, NewGrid),
     life(NewGrid).
 
+main :-
+	read_file('input11', Grid), life(Grid).
+
 println([]).
 println([X|Xs]) :-
 	writeln(X),

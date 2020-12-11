@@ -31,6 +31,10 @@ seat(L0, U0, [C|Cs], L, U) :-
 	seat_next(L0, U0, C, L1, U1),
 	seat(L1, U1, Cs, L, U).
 
+find_seat(L, U, Cs, X) :-
+	seat(L, U, Cs, X, X),
+	label([L, U]).
+
 split_at(N,Xs,Take,Rest) :-
     split_at_(Xs,N,Take,Rest).
 split_at_(Rest, 0, [], Rest) :- !. % optimization
