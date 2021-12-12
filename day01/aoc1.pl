@@ -16,9 +16,3 @@ find3(Y,Xs) :-
     X2 #< X3,
     X1 + X2 + X3 #= 2020,
     Y #= X1 * X2 * X3.
-
-
-/*read_file_to_string('input2', S, []), split_string(S, '\n', [], S2), 
-maplist(number_string, Xs, S2),
-find3(Z, Xs).*/
-Rscript -e "rmarkdown::render('ex8/ex8_amrc.Rmd', 'all')"
